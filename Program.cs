@@ -1,5 +1,6 @@
 using BShop.ProductApi.Context;
 using AutoMapper;
+using System.Text.Json.Serialization;
 using BShop.ProductApi.DTOs.Mappings;
 using Microsoft.EntityFrameworkCore;
 using BShop.ProductApi.Services;
@@ -25,7 +26,8 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
 // Add controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(x =>
+                x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 
 // Configuração do Swagger
 builder.Services.AddEndpointsApiExplorer();
