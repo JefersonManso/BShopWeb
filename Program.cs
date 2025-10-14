@@ -1,4 +1,6 @@
 using BShop.ProductApi.Context;
+using AutoMapper;
+using BShop.ProductApi.DTOs.Mappings;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +12,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // Adiciona DbContext com Pomelo + MySQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+
+// Configura o AutoMapper manualmente
+var mapperConfig = new MapperConfiguration(cfg =>
+                   {
+                       cfg.AddProfile(new MappingProfile());
+                   });
+
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
 // Add services to the container.
 
