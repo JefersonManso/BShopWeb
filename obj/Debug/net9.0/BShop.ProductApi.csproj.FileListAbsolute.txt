@@ -130,3 +130,6 @@ C:\Users\jefer\Desktop\BShop\BShop.ProductApi\obj\Debug\net9.0\refint\BShop.Prod
 C:\Users\jefer\Desktop\BShop\BShop.ProductApi\obj\Debug\net9.0\BShop.ProductApi.pdb
 C:\Users\jefer\Desktop\BShop\BShop.ProductApi\obj\Debug\net9.0\BShop.ProductApi.genruntimeconfig.cache
 C:\Users\jefer\Desktop\BShop\BShop.ProductApi\obj\Debug\net9.0\ref\BShop.ProductApi.dll
+C:\Users\jefer\Desktop\BShop\BShop.ProductApi\bin\Debug\net9.0\AutoMapper.dll
+C:\Users\jefer\Desktop\BShop\BShop.ProductApi\obj\Debug\net9.0\BShop.ProductApi.sourcelink.json
+C:\Users\jefer\Desktop\BShop\BShop.ProductApi\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
