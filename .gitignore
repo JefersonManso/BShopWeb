@@ -1,19 +1,61 @@
-﻿# Visual Studio
+﻿# ===============================
+# .gitignore para projetos .NET / ASP.NET Core
+# ===============================
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Tt]emp/
+*.tmp
+*.bak
+
+# Visual Studio
 .vs/
+.vscode/
 *.user
 *.suo
+*.g
+*.userosscache
+*.sln.docstates
 
-# Build
-bin/
-obj/
+# IDEs
+.idea/
+*.iml
+
+# Arquivos temporários do sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# ASP.NET / MVC
+wwwroot/lib/
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Configurações locais
+appsettings.Development.json
+secrets.json
+.env
+
+# Testes e relatórios
+TestResult*/
+coverage/
+*.coverage
+*.coveragexml
+
+# Logs
+*.log
 
 # NuGet
 *.nupkg
 *.snupkg
 packages/
+*.nuspec
 project.lock.json
-project.fragment.lock.json
-artifacts/
 
-# Secrets
-appsettings.Development.json
+# Entity Framework
+Migrations/
