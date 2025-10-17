@@ -55,8 +55,8 @@ public class AccountController : Controller
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         RoleManager<IdentityRole> roleManager
-,
-        IAuthenticationHandlerProvider handlerProvider
+        //IAuthenticationHandlerProvider handlerProvider
+
         //TestUserStore users = null
         )
     {
@@ -72,7 +72,7 @@ public class AccountController : Controller
         _schemeProvider = schemeProvider;
         _identityProviderStore = identityProviderStore;
         _events = events;
-        _authenticationHandlerProvider = handlerProvider;
+        //_authenticationHandlerProvider = handlerProvider;
     }
 
     /// <summary>

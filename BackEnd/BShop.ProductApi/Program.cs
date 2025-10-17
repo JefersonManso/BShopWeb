@@ -1,66 +1,113 @@
-using BShop.ProductApi.Context;
-using AutoMapper;
-using System.Text.Json.Serialization;
-using BShop.ProductApi.DTOs.Mappings;
-using Microsoft.EntityFrameworkCore;
-using BShop.ProductApi.Services;
 using BShop.ProductApi.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
+using BShop.ProductApi.Context;
+using BShop.ProductApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Connection string do MySQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// Adiciona DbContext com Pomelo + MySQL
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
-// Configura o AutoMapper 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-
-// Registra serviços
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IProductService, ProductService>();
-
-// Add controllers
-builder.Services.AddControllers().AddJsonOptions(x =>
-                x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
-
-// Configuração do Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     {
-        Title = "BShop Product API",
-        Version = "v1",
-        Description = "API para gerenciamento de produtos e categorias do sistema BShop",
-        Contact = new OpenApiContact
-        {
-            Name = "Jeferson",
-            Email = "seuemail@dominio.com"
-        }
+        options.JsonSerializerOptions.ReferenceHandler =
+            ReferenceHandler.IgnoreCycles;
+    });
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BShop.ProductApi", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = @"'Bearer' [space] seu token",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+         {
+            new OpenApiSecurityScheme
+            {
+               Reference = new OpenApiReference
+               {
+                  Type = ReferenceType.SecurityScheme,
+                  Id = "Bearer"
+               },
+               Scheme = "oauth2",
+               Name = "Bearer",
+               In= ParameterLocation.Header
+            },
+            new List<string> ()
+         }
+    });
+});
+
+var mySqlConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+                  options.UseMySql(mySqlConnection,
+                    ServerVersion.AutoDetect(mySqlConnection)));
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy",
+        builder => builder.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
+
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+
+builder.Services.AddAuthentication("Bearer")
+       .AddJwtBearer("Bearer", options =>
+       {
+           options.Authority =
+             builder.Configuration["BShop.IdentityServer:ApplicationUrl"];
+
+           options.TokenValidationParameters = new TokenValidationParameters
+           {
+               ValidateAudience = false
+           };
+       });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ApiScope", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("scope", "bshop");
     });
 });
 
 var app = builder.Build();
 
-// Middleware do Swagger
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BShop Product API v1");
-        c.RoutePrefix = string.Empty;
-    });
-
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("CorsPolicy");
+app.UseRouting();
+
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();

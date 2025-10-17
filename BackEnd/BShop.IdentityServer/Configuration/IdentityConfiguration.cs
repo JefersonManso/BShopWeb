@@ -53,15 +53,26 @@ public class IdentityConfiguration
                     ClientId = "bshop",
                     ClientSecrets = { new Secret("abracadabra#simsalabim".Sha256())},
                     AllowedGrantTypes = GrantTypes.Code, //via codigo
-                    RedirectUris = {"https://localhost:7031/signin-oidc"},//login
-                    PostLogoutRedirectUris = {"https://localhost:7031/signout-callback-oidc"},//logout
+                    RequireConsent = false,
+                    RedirectUris = {"http://localhost:5201/signin-oidc"},//login
+                    PostLogoutRedirectUris = {"http://localhost:5201/signout-callback-oidc"},//logout
+                     AllowedCorsOrigins = { "http://localhost:5201" },
+
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Email,
-                        "bshop"
-                    }
+                        "bshop",
+                        "offline_access"
+                    },
+                    AllowOfflineAccess = true, // refresh token
+                    RequirePkce = true,
+                    RequireClientSecret = true,
+                    AlwaysIncludeUserClaimsInIdToken = true,
+
+                     
+                     AllowAccessTokensViaBrowser = true // permite retorno via navegador
                 }
         };
 }

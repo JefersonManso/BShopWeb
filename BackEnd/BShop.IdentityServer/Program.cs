@@ -1,47 +1,47 @@
 using BShop.IdentityServer.Configuration;
 using BShop.IdentityServer.Data;
-using Duende.IdentityServer;
+using BShop.IdentityServer.SeedDatabase;
 using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllersWithViews();
 
+// MySQL connection
 var mySqlConnection = builder.Configuration.GetConnectionString("DefaultConnection");
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-                  options.UseMySql(mySqlConnection,
-                    ServerVersion.AutoDetect(mySqlConnection)));
+    options.UseMySql(mySqlConnection, ServerVersion.AutoDetect(mySqlConnection)));
 
+// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<AppDbContext>()
-                .AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
-//configurações dos serviços do IdentityServer
-var builderIdentityServer = builder.Services.AddIdentityServer(options =>
+// IdentityServer
+var identityServerBuilder = builder.Services.AddIdentityServer(options =>
 {
     options.Events.RaiseErrorEvents = true;
     options.Events.RaiseInformationEvents = true;
     options.Events.RaiseFailureEvents = true;
     options.Events.RaiseSuccessEvents = true;
     options.EmitStaticAudienceClaim = true;
-}).AddInMemoryIdentityResources(
-                       IdentityConfiguration.IdentityResources)
-                       .AddInMemoryApiScopes(IdentityConfiguration.ApiScopes)
-                       .AddInMemoryClients(IdentityConfiguration.Clients)
-                       .AddAspNetIdentity<ApplicationUser>();
+})
+.AddInMemoryIdentityResources(IdentityConfiguration.IdentityResources)
+.AddInMemoryApiScopes(IdentityConfiguration.ApiScopes)
+.AddInMemoryClients(IdentityConfiguration.Clients)
+.AddAspNetIdentity<ApplicationUser>();
 
-builderIdentityServer.AddDeveloperSigningCredential();
+identityServerBuilder.AddDeveloperSigningCredential();
 
-//builder.Services.AddScoped<IDatabaseSeedInitializer, DatabaseIdentityServerInitializer>();
-//builder.Services.AddScoped<IProfileService, ProfileAppService>();
+// Seeder
+builder.Services.AddScoped<IDatabaseSeedInitializer, DatabaseIdentityServerInitializer>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -50,25 +50,28 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
 app.UseIdentityServer();
+app.UseAuthentication();
 app.UseAuthorization();
 
-//SeedDatabaseIdentityServer(app);
+// Seed users & roles
 
+void SeedDatabaseIdentityServer(IApplicationBuilder app)
+{
+    using (var serviceScope = app.ApplicationServices.CreateScope())
+{
+    var initRolesUsers = serviceScope.ServiceProvider
+                           .GetService<IDatabaseSeedInitializer>();
+
+    initRolesUsers.InitializeSeedRoles();
+    initRolesUsers.InitializeSeedUsers();
+}
+}
+
+// Routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-
-//void SeedDatabaseIdentityServer(IApplicationBuilder app)
-//{
-//    using (var serviceScope = app.ApplicationServices.CreateScope())
-//    {
-//        var initRolesUsers = serviceScope.ServiceProvider
-//                               .GetService<IDatabaseSeedInitializer>();
-
-//        initRolesUsers.InitializeSeedRoles();
-//        initRolesUsers.InitializeSeedUsers();
-//    }
-//}
