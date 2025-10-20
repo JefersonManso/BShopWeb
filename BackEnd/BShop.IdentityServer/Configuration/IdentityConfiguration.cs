@@ -26,7 +26,7 @@ public class IdentityConfiguration
     public static IEnumerable<ApiScope> ApiScopes =>
         new List<ApiScope>
         {
-                // vshop é aplicação web que vai acessar
+                // bshop é aplicação web que vai acessar
                 // o IdentityServer para obter o token
                 new ApiScope("bshop", "BShop Server"),
                 new ApiScope(name: "read", "Read data."),
@@ -36,7 +36,7 @@ public class IdentityConfiguration
 
     // Lista de Clientes(aplicativos) que podem usar seu sistema;
     // Cada aplicativo cliente é configurado para ter permissão apenas para fazer certas coisas
-    // Nossos clientes (vshop.web) vão solitar um token ao IdentityServer
+    // Nossos clientes (bshop.web) vão solitar um token ao IdentityServer
     public static IEnumerable<Client> Clients =>
         new List<Client>
         {
@@ -52,27 +52,19 @@ public class IdentityConfiguration
                 {
                     ClientId = "bshop",
                     ClientSecrets = { new Secret("abracadabra#simsalabim".Sha256())},
-                    AllowedGrantTypes = GrantTypes.Code, //via codigo
-                    RequireConsent = false,
-                    RedirectUris = {"http://localhost:5201/signin-oidc"},//login
-                    PostLogoutRedirectUris = {"http://localhost:5201/signout-callback-oidc"},//logout
-                     AllowedCorsOrigins = { "http://localhost:5201" },
-
+                    AllowedGrantTypes = GrantTypes.Code, //via codigo                    
+                    RedirectUris = {"https://localhost:5201/signin-oidc"},//login
+                    PostLogoutRedirectUris = {"https://localhost:5201/signout-callback-oidc"},//logout                     
+                    RequirePkce = true,
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Email,
-                        "bshop",
-                        "offline_access"
+                        "bshop"
+                       
                     },
-                    AllowOfflineAccess = true, // refresh token
-                    RequirePkce = true,
-                    RequireClientSecret = true,
-                    AlwaysIncludeUserClaimsInIdToken = true,
-
-                     
-                     AllowAccessTokensViaBrowser = true // permite retorno via navegador
+                   
                 }
         };
 }

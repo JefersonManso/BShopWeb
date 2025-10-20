@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using BShop.ProductApi.DTOs;
 using BShop.ProductApi.Models;
+
 
 namespace BShop.ProductApi.DTOs.Mappings;
 

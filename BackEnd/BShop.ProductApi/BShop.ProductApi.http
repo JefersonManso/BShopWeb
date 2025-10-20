@@ -1,4 +1,4 @@
-@BShop.ProductApi_HostAddress = http://localhost:5007
+@BShop.ProductApi_HostAddress = http://localhost:7102
 
 GET {{BShop.ProductApi_HostAddress}}/weatherforecast/
 Accept: application/json

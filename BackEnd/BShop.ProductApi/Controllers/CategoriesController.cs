@@ -1,9 +1,8 @@
 ﻿using BShop.ProductApi.DTOs;
-using BShop.ProductApi.Roles;
-using BShop.ProductApi.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using BShop.ProductApi.Services;
+using BShop.ProductApi.Roles;
 
 namespace BShop.ProductApi.Controllers;
 
@@ -13,7 +12,6 @@ namespace BShop.ProductApi.Controllers;
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
-
     public CategoriesController(ICategoryService categoryService)
     {
         _categoryService = categoryService;
