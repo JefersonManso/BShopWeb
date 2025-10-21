@@ -1,6 +1,7 @@
 using BShop.IdentityServer.Configuration;
 using BShop.IdentityServer.Data;
 using BShop.IdentityServer.SeedDatabase;
+using BShop.IdentityServer.Services;
 using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +39,7 @@ var builderIdentityServer = builder.Services.AddIdentityServer(options =>
 builderIdentityServer.AddDeveloperSigningCredential();
 
 builder.Services.AddScoped<IDatabaseSeedInitializer, DatabaseIdentityServerInitializer>();
-//builder.Services.AddScoped<IProfileService, ProfileAppService>();
+builder.Services.AddScoped<IProfileService, ProfileAppService>();
 
 var app = builder.Build();
 

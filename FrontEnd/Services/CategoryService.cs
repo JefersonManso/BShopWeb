@@ -17,26 +17,27 @@ public class CategoryService : ICategoryService
         _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
     }
 
-    public async Task<IEnumerable<CategoryViewModel>> GetAllCategories()
+    public async Task<IEnumerable<CategoryViewModel>> GetAllCategories(string token)
     {
         var client = _clientFactory.CreateClient("ProductApi");
-        
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
         IEnumerable<CategoryViewModel> categories;
 
-        var response = await client.GetAsync(apiEndpoint);        
-
-        if (response.IsSuccessStatusCode)
+        using (var response = await client.GetAsync(apiEndpoint))
         {
-            var apiResponse = await response.Content.ReadAsStreamAsync();
-            categories = await JsonSerializer
-                .DeserializeAsync<IEnumerable<CategoryViewModel>>(apiResponse, _options);
-        }
-        else
-        {
-            return null;
 
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadAsStreamAsync();
+                categories = await JsonSerializer
+                          .DeserializeAsync<IEnumerable<CategoryViewModel>>(apiResponse, _options);
+            }
+            else
+            {
+                throw new HttpRequestException(response.ReasonPhrase);
+            }
         }
-        
         return categories;
     }
 }

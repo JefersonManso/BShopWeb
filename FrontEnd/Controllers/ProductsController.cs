@@ -8,26 +8,26 @@ using BShop.Web.Services.Contracts;
 
 namespace BShop.Web.Controllers;
 
-//[Authorize(Roles = Role.Admin)]
+[Authorize(Roles = Role.Admin)]
 public class ProductsController : Controller
 {
     private readonly IProductService _productService;
     private readonly ICategoryService _categoryService;
-    //private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IWebHostEnvironment _webHostEnvironment;
     public ProductsController(IProductService productService,
-                            ICategoryService categoryService)
-                            
+                            ICategoryService categoryService,
+                            IWebHostEnvironment webHostEnvironment)
     {
         _productService = productService;
         _categoryService = categoryService;
-        
+        _webHostEnvironment = webHostEnvironment;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProductViewModel>>> Index()
     {
 
-        var result = await _productService.GetAllProducts();
+        var result = await _productService.GetAllProducts(await GetAccessToken());
 
         if (result is null)
             return View("Error");
@@ -38,17 +38,16 @@ public class ProductsController : Controller
     [HttpGet]
     public async Task<IActionResult> CreateProduct()
     {
-        ViewBag.CategoryId = new SelectList(await _categoryService.GetAllCategories(), "CategoryId", "Name");
+        ViewBag.CategoryId = new SelectList(await _categoryService.GetAllCategories(await GetAccessToken()), "CategoryId", "Name");
         return View();
     }
 
     [HttpPost]
-    [Authorize]
     public async Task<IActionResult> CreateProduct(ProductViewModel productVM)
     {
         if (ModelState.IsValid)
         {
-            var result = await _productService.CreateProduct(productVM);
+            var result = await _productService.CreateProduct(productVM, await GetAccessToken());
 
             if (result != null)
                 return RedirectToAction(nameof(Index));
@@ -56,7 +55,7 @@ public class ProductsController : Controller
         else
         {
             ViewBag.CategoryId = new SelectList(await
-                                 _categoryService.GetAllCategories(), "CategoryId", "Name");
+                                 _categoryService.GetAllCategories(await GetAccessToken()), "CategoryId", "Name");
         }
         return View(productVM);
     }
@@ -65,9 +64,9 @@ public class ProductsController : Controller
     public async Task<IActionResult> UpdateProduct(int id)
     {
         ViewBag.CategoryId = new SelectList(await
-                           _categoryService.GetAllCategories(), "CategoryId", "Name");
+                           _categoryService.GetAllCategories(await GetAccessToken()), "CategoryId", "Name");
 
-        var result = await _productService.FindProductById(id);
+        var result = await _productService.FindProductById(id, await GetAccessToken());
 
         if (result is null)
             return View("Error");
@@ -76,12 +75,11 @@ public class ProductsController : Controller
     }
 
     [HttpPost]
-    [Authorize]
     public async Task<IActionResult> UpdateProduct(ProductViewModel productVM)
     {
         if (ModelState.IsValid)
         {
-            var result = await _productService.UpdateProduct(productVM);
+            var result = await _productService.UpdateProduct(productVM, await GetAccessToken());
 
             if (result is not null)
                 return RedirectToAction(nameof(Index));
@@ -90,10 +88,9 @@ public class ProductsController : Controller
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<ActionResult<ProductViewModel>> DeleteProduct(int id)
     {
-        var result = await _productService.FindProductById(id);
+        var result = await _productService.FindProductById(id, await GetAccessToken());
 
         if (result is null)
             return View("Error");
@@ -102,15 +99,17 @@ public class ProductsController : Controller
     }
 
     [HttpPost(), ActionName("DeleteProduct")]
-    [Authorize(Roles = Role.Admin)]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var result = await _productService.DeleteProductById(id);
+        var result = await _productService.DeleteProductById(id, await GetAccessToken());
 
         if (!result)
             return View("Error");
 
         return RedirectToAction("Index");
-    }    
-    
+    }
+    private async Task<string> GetAccessToken()
+    {
+        return await HttpContext.GetTokenAsync("access_token");
+    }
 }
