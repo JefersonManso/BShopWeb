@@ -1,0 +1,6 @@
+@BShop.CartApi_HostAddress = http://localhost:5064
+
+GET {{BShop.CartApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

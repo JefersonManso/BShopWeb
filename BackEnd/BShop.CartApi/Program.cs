@@ -1,23 +1,17 @@
-using BShop.ProductApi.Repositories;
+using BShop.CartApi.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text.Json.Serialization;
-using BShop.ProductApi.Context;
-using BShop.ProductApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(x =>
-                x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
-
-
+// Add services to the container
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BShop.ProductApi", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BShop.CartApi", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"'Bearer' [space] seu token",
@@ -52,7 +46,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
                   options.UseMySql(mySqlConnection,
                     ServerVersion.AutoDetect(mySqlConnection)));
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 builder.Services.AddCors(options =>
 {
@@ -62,17 +56,12 @@ builder.Services.AddCors(options =>
                           .AllowAnyHeader());
 });
 
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-
 
 builder.Services.AddAuthentication("Bearer")
        .AddJwtBearer("Bearer", options =>
        {
-           options.Authority = 
-            builder.Configuration["BShop.IdentityServer:ApplicationUrl"];       
+           options.Authority =
+            builder.Configuration["BShop.IdentityServer:ApplicationUrl"];
 
            options.TokenValidationParameters = new TokenValidationParameters
            {
@@ -90,9 +79,10 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
