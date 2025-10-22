@@ -1,18 +1,21 @@
-using BShop.CartApi.Context;
-using BShop.CartApi.Repositories;
+using BShop.DiscountApi.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using BShop.DiscountApi.Context;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Add services to the container.
+
 builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BShop.CartApi", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BShop.DiscountApi", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"'Bearer' [space] seu token",
@@ -47,10 +50,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
                   options.UseMySql(mySqlConnection,
                     ServerVersion.AutoDetect(mySqlConnection)));
 
-
-
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICouponRepository, CouponRepository>();
 
 builder.Services.AddCors(options =>
 {
@@ -60,19 +61,17 @@ builder.Services.AddCors(options =>
                           .AllowAnyHeader());
 });
 
-
 builder.Services.AddAuthentication("Bearer")
        .AddJwtBearer("Bearer", options =>
        {
            options.Authority =
-            builder.Configuration["BShop.IdentityServer:ApplicationUrl"];
+             builder.Configuration["BShop.IdentityServer:ApplicationUrl"];
 
            options.TokenValidationParameters = new TokenValidationParameters
            {
                ValidateAudience = false
            };
        });
-
 
 builder.Services.AddAuthorization(options =>
 {
@@ -83,10 +82,9 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
-
 var app = builder.Build();
 
-// Configure middleware
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -94,7 +92,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("CorsPolicy");
 app.UseRouting();
 

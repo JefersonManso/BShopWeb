@@ -1,51 +1,37 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using BShop.Web.Services;
 using BShop.Web.Services.Contracts;
-
-
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-
-builder.Services.AddHttpClient("ProductApi", c =>
-{
-    c.BaseAddress = new Uri(builder.Configuration["ServiceUri:ProductApi"]);
-
-});
-
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = "Cookies";
     options.DefaultChallengeScheme = "oidc";
 })
-    
     .AddCookie("Cookies", c =>
-{
-    c.ExpireTimeSpan = TimeSpan.FromMinutes(10);
-    c.Events = new CookieAuthenticationEvents()
     {
-        OnRedirectToAccessDenied = (context) =>
+        c.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+        c.Events = new CookieAuthenticationEvents()
         {
-            context.HttpContext.Response.Redirect(builder.Configuration["ServiceUri:IdentityServer"] + "/Account/AccessDenied");
-            return Task.CompletedTask;
-        }
-    };
-})
-
+            OnRedirectToAccessDenied = (context) =>
+            {
+                context.HttpContext.Response.Redirect(builder.Configuration["ServiceUri:IdentityServer"] + "/Account/AccessDenied");
+                return Task.CompletedTask;
+            }
+        };
+    })
     .AddOpenIdConnect("oidc", options =>
     {
-        options.Events.OnRemoteFailure = (context) =>
+        options.Events.OnRemoteFailure = context =>
         {
             context.Response.Redirect("/");
             context.HandleResponse();
+
             return Task.FromResult(0);
         };
 
@@ -60,10 +46,30 @@ builder.Services.AddAuthentication(options =>
         options.TokenValidationParameters.RoleClaimType = "role";
         options.Scope.Add("bshop");
         options.SaveTokens = true;
-
     }
 );
 
+builder.Services.AddHttpClient<IProductService, ProductService>("ProductApi", c =>
+{
+    c.BaseAddress = new Uri(builder.Configuration["ServiceUri:ProductApi"]);
+    c.DefaultRequestHeaders.Add("Connection", "Keep-Alive");
+    c.DefaultRequestHeaders.Add("Keep-Alive", "3600");
+    c.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactory-ProductApi");
+});
+
+builder.Services.AddHttpClient<ICartService, CartService>("CartApi",
+    c => c.BaseAddress = new Uri(builder.Configuration["ServiceUri:CartApi"])
+);
+
+builder.Services.AddHttpClient<ICouponService, CouponService>("DiscountApi", c =>
+   c.BaseAddress = new Uri(builder.Configuration["ServiceUri:DiscountApi"])
+);
+
+builder.Services.AddScoped<ICouponService, CouponService>();
+
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 var app = builder.Build();
 

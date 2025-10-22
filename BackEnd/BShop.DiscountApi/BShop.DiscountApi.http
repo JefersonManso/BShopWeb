@@ -1,0 +1,6 @@
+@BShop.DiscountApi_HostAddress = http://localhost:5110
+
+GET {{BShop.DiscountApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
