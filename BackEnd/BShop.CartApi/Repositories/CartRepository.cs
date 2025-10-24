@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using BShop.CartApi.Context;
 
 
+
 namespace BShop.CartApi.Repositories;
 
 public class CartRepository : ICartRepository
@@ -35,61 +36,46 @@ public class CartRepository : ICartRepository
 
     public async Task<CartDTO> GetCartByUserIdAsync(string userId)
     {
-        var header = await _context.CartHeaders
-                           .FirstOrDefaultAsync(c => c.UserId == userId);
-
-        if (header == null)
-            return null;
-
-        var items = await _context.CartItems
-                        .Where(c => c.CartHeaderId == header.Id)
-                        .Include(c => c.Product)
-                        .ToListAsync();
-
-        var cart = new Cart
+        Cart cart = new()
         {
-            CartHeader = header,
-            CartItems = items
+            CartHeader = await _context.CartHeaders
+                               .FirstOrDefaultAsync(c => c.UserId == userId),
         };
+
+        cart.CartItems = _context.CartItems
+                        .Where(c => c.CartHeaderId == cart.CartHeader.Id)
+                        .Include(c => c.Product);
 
         return _mapper.Map<CartDTO>(cart);
     }
-
 
     public async Task<bool> DeleteItemCartAsync(int cartItemId)
     {
         try
         {
-            var cartItem = await _context.CartItems
-                .FirstOrDefaultAsync(c => c.Id == cartItemId);
+            CartItem cartItem = await _context.CartItems
+                               .FirstOrDefaultAsync(c => c.Id == cartItemId);
 
-            if (cartItem == null)
-                return false;
-
-            int total = await _context.CartItems
-                .Where(c => c.CartHeaderId == cartItem.CartHeaderId)
-                .CountAsync();
+            int total = _context.CartItems.Where(c => c.CartHeaderId == cartItem.CartHeaderId).Count();
 
             _context.CartItems.Remove(cartItem);
+            await _context.SaveChangesAsync();
 
             if (total == 1)
             {
-                var cartHeader = await _context.CartHeaders
-                    .FirstOrDefaultAsync(c => c.Id == cartItem.CartHeaderId);
+                var cartHeader = await _context.CartHeaders.FirstOrDefaultAsync(
+                                             c => c.Id == cartItem.CartHeaderId);
 
-                if (cartHeader != null)
-                    _context.CartHeaders.Remove(cartHeader);
+                _context.CartHeaders.Remove(cartHeader);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return true;
         }
-        catch
+        catch (Exception)
         {
             return false;
         }
     }
-
 
     public async Task<CartDTO> UpdateCartAsync(CartDTO cartDto)
     {
